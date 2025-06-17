@@ -5,7 +5,7 @@ from random import randint
 import time
 import math
 from config import (SCREEN_RESOLUTION, LARGEUR_SCREEN, HAUTEUR_SCREEN, LARGEUR_CARD, HAUTEUR_CARD, MARGE, WHITE_COLOR, VALID_BUTTON_COO, 
-                    VALID_BUTTON_RADIUS, SYMBOLS, TOTAL_STUDENTS, BLUE_COLOR)
+                    VALID_BUTTON_RADIUS, SYMBOLS, TOTAL_STUDENTS, BLUE_COLOR, SCREEN_SURFACE)
 
 def load_image(filename):
     """
@@ -63,58 +63,40 @@ def affichage(player_game) :
     img_yumeko = load_image("yumeko(3)(300x250).png")
     img_saotome = load_image("saotome_pretty(240x320).png")
     img_fond = load_image("Fonds/fond(1).jpg")
-    img_validate_button = load_image("valid_icon(100x100).png")
-
+    
+    SYMBOLS_IMG = {'rock' : img_rock_card,
+                   'scissors' : img_scissors_card,
+                   'paper' : img_paper_card }
     #carte 1 joueur (objet rect)
-    player_card1 = symbols_img[player_game[0]].get_rect()
+    player_card1 = SYMBOLS_IMG[player_game[0]].get_rect()
     player_card1.x = LARGEUR_SCREEN/2-LARGEUR_CARD/2-LARGEUR_CARD-MARGE
     player_card1.y = HAUTEUR_SCREEN-HAUTEUR_CARD-MARGE    
     #carte 2 joueur
-    player_card2 = symbols_img[player_game[1]].get_rect()
+    player_card2 = SYMBOLS_IMG[player_game[1]].get_rect()
     player_card2.x = LARGEUR_SCREEN/2-LARGEUR_CARD/2
     player_card2.y = HAUTEUR_SCREEN-HAUTEUR_CARD-MARGE    
     #carte 3 joueur
-    player_card3 = symbols_img[player_game[2]].get_rect() 
+    player_card3 = SYMBOLS_IMG[player_game[2]].get_rect() 
     player_card3.x = LARGEUR_SCREEN/2-LARGEUR_CARD/2+LARGEUR_CARD+MARGE
     player_card3.y = HAUTEUR_SCREEN-HAUTEUR_CARD-MARGE
-
-    card_state = {'player_card1' : 0,
-              'player_card2' : 0,
-              'player_card3' : 0,} #0 down, 1 up
-    symbols_img = {'rock' : img_rock_card,
-               'scissors' : img_scissors_card,
-               'paper' : img_paper_card }
-    card_state = {'player_card1' : 0,
-              'player_card2' : 0,
-              'player_card3' : 0,} #0 down, 1 up
-
-    symbol_win = {'rock' : 'scissors',
-               'scissors' : 'paper',
-               'paper' : 'rock' }
     
     #affichage du fond
-    SCREEN_RESOLUTION.fill(BLUE_COLOR) #couleur de fond (en cas si l'image ne se charge pas)
-    SCREEN_RESOLUTION.blit(img_fond, (-520, -220))
+    SCREEN_SURFACE.fill(BLUE_COLOR) #couleur de fond (en cas si l'image ne se charge pas)
+    SCREEN_SURFACE.blit(img_fond, (-520, -220))
     #affichage Yumeko dans le coin droit de la  fenêtre
-    SCREEN_RESOLUTION.blit(img_yumeko, (LARGEUR_SCREEN-300, HAUTEUR_SCREEN-250))
+    SCREEN_SURFACE.blit(img_yumeko, (LARGEUR_SCREEN-300, HAUTEUR_SCREEN-250))
     #affichage Saotome dans le coin gauche de la  fenêtre
-    SCREEN_RESOLUTION.blit(img_saotome, (0, HAUTEUR_SCREEN-300))      
+    SCREEN_SURFACE.blit(img_saotome, (0, HAUTEUR_SCREEN-300))      
     #affichage carte 1,2,3 IA
-    SCREEN_RESOLUTION.blit(img_back_card, (LARGEUR_SCREEN/2-LARGEUR_CARD/2-LARGEUR_CARD-MARGE, MARGE))
-    SCREEN_RESOLUTION.blit(img_back_card, (LARGEUR_SCREEN/2-LARGEUR_CARD/2, MARGE))
-    SCREEN_RESOLUTION.blit(img_back_card, (LARGEUR_SCREEN/2-LARGEUR_CARD/2+LARGEUR_CARD+MARGE, MARGE))
+    SCREEN_SURFACE.blit(img_back_card, (LARGEUR_SCREEN/2-LARGEUR_CARD/2-LARGEUR_CARD-MARGE, MARGE))
+    SCREEN_SURFACE.blit(img_back_card, (LARGEUR_SCREEN/2-LARGEUR_CARD/2, MARGE))
+    SCREEN_SURFACE.blit(img_back_card, (LARGEUR_SCREEN/2-LARGEUR_CARD/2+LARGEUR_CARD+MARGE, MARGE))
     #affichage carte 1,2,3 joueur
-    SCREEN_RESOLUTION.blit(symbols_img[player_game[0]], player_card1)
-    SCREEN_RESOLUTION.blit(symbols_img[player_game[1]], player_card2)
-    SCREEN_RESOLUTION.blit(symbols_img[player_game[2]], player_card3)
-    validate = False
-    #affichage du bouton validé si une carte est sélectionné
-    for cle in card_state :
-        if card_state[cle] == 1 :           
-            pygame.draw.circle(SCREEN_RESOLUTION, WHITE_COLOR, VALID_BUTTON_COO, VALID_BUTTON_RADIUS) #taille ecran, couleur, position, rayon
-            SCREEN_RESOLUTION.blit(img_validate_button, (LARGEUR_SCREEN-MARGE*5.3, HAUTEUR_SCREEN/2-MARGE*1.25))
-            validate = True
-    return None
+    SCREEN_SURFACE.blit(SYMBOLS_IMG[player_game[0]], player_card1)
+    SCREEN_SURFACE.blit(SYMBOLS_IMG[player_game[1]], player_card2)
+    SCREEN_SURFACE.blit(SYMBOLS_IMG[player_game[2]], player_card3)
+    
+    return player_card1, player_card2, player_card3
 
 
 def pick_player_cards(box) :
@@ -132,11 +114,38 @@ def pick_player_cards(box) :
         box.remove(box[a])
     return box, player_cards
 
-def card_go_up(card) :
+def allow_validation(card_state) :
+    carte_up = 0
+    print(card_state)
+    for cle in card_state :
+        if card_state[cle] == 1 :
+            carte_up += 1 
+    if carte_up > 0 :        
+        return True
+    else :
+        return False
+        
+def draw_validation() :
+    img_validate_button = load_image("valid_icon(100x100).png")
+    pygame.draw.circle(SCREEN_SURFACE, WHITE_COLOR, VALID_BUTTON_COO, VALID_BUTTON_RADIUS) #taille ecran, couleur, position, rayon
+    SCREEN_SURFACE.blit(img_validate_button, (LARGEUR_SCREEN-MARGE*5.3, HAUTEUR_SCREEN/2-MARGE*1.25))
+
+        
+def dist(coo_point1, coo_point2) :
     """
-    Déplacement d'une carte vers le haut (lorsqu'on la sélectionne).    
+    Calcule la distance entre deux points.
+    Entrées : Tuple contenant les coordonnées du point1, Tuple contenant les coordonnées du point2
     """
-    global card_state
+    x1, y1 = coo_point1
+    x2, y2 = coo_point2
+    distance = math.sqrt( (x1-x2)**2 + (y1-y2)**2 )
+    return distance
+
+"""
+def card_go_up(card, card_state) :
+    """
+    #Déplacement d'une carte vers le haut (lorsqu'on la sélectionne).    
+"""
     # Vérifie qu'il n'y a pas une autre carte de levé, si oui, la replace à son état initial.
     if card_state['player_card1'] == 1 :
         card_go_down(player_card1)
@@ -159,8 +168,8 @@ def card_go_up(card) :
 
 def card_go_down(card) :
     """
-    Déplacement d'une carte vers le bas.
-    """
+    #Déplacement d'une carte vers le bas.
+"""
     i=0
     while i < 10 :
         time.sleep(.010) #milliseconde, sinon par défaut c'est en seconde
@@ -169,15 +178,4 @@ def card_go_down(card) :
         pygame.display.flip() #maj affichage
         i += 1  #incrémentation de i#clic gauche
     return None
-        
-def dist(coo_point1, coo_point2) :
-    """
-    Calcule la distance entre deux points.
-    Entrées : Tuple contenant les coordonnées du point1, Tuple contenant les coordonnées du point2
-    """
-    x1, y1 = coo_point1
-    x2, y2 = coo_point2
-    distance = math.sqrt( (x1-x2)**2 + (y1-y2)**2 )
-    return distance
-
-
+"""

@@ -1,0 +1,1 @@
+window_surface  = pygame.display.set_mode(window_resolution)
