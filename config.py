@@ -17,5 +17,7 @@ SYMBOLS = ['rock', 'paper', 'scissors']
 SYMBOLS_WIN = {'rock' : 'scissors',
                'scissors' : 'paper',
                'paper' : 'rock' }
-
-
+CARD_STATE = {'player_card1' : 0,
+              'player_card2' : 0,
+              'player_card3' : 0,} #0 down, 1 up
+FPS = 60

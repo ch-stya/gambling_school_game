@@ -5,7 +5,7 @@ from random import randint
 import time
 import math
 from config import (SCREEN_RESOLUTION, LARGEUR_SCREEN, HAUTEUR_SCREEN, LARGEUR_CARD, HAUTEUR_CARD, MARGE, WHITE_COLOR, VALID_BUTTON_COO, 
-                    VALID_BUTTON_RADIUS, SYMBOLS, TOTAL_STUDENTS, BLUE_COLOR, SCREEN_SURFACE)
+                    VALID_BUTTON_RADIUS, SYMBOLS, TOTAL_STUDENTS, BLUE_COLOR, SCREEN_SURFACE, CARD_STATE, FPS)
 
 def load_image(filename):
     """
@@ -52,21 +52,11 @@ def fill_box() :
         box = box + [SYMBOLS[rand]]
     return box
 
-def affichage(player_game) :
-    """
-    Appelle tout ce qui est nécessaire à afficher.
-    """
-    img_rock_card = load_image("Cards/rock_card(170x220).png")
-    img_back_card = load_image("Cards/back_cards(170x220).png")
-    img_scissors_card = load_image("Cards/scissors_card(170x220).png")
-    img_paper_card = load_image("Cards/paper_card(170x220).png")
-    img_yumeko = load_image("yumeko(3)(300x250).png")
-    img_saotome = load_image("saotome_pretty(240x320).png")
-    img_fond = load_image("Fonds/fond(1).jpg")
+def generate_player_game(player_game, images):
+    SYMBOLS_IMG = {'rock' : images["img_rock_card"],
+                   'scissors' : images["img_scissors_card"],
+                   'paper' : images["img_paper_card"] }
     
-    SYMBOLS_IMG = {'rock' : img_rock_card,
-                   'scissors' : img_scissors_card,
-                   'paper' : img_paper_card }
     #carte 1 joueur (objet rect)
     player_card1 = SYMBOLS_IMG[player_game[0]].get_rect()
     player_card1.x = LARGEUR_SCREEN/2-LARGEUR_CARD/2-LARGEUR_CARD-MARGE
@@ -79,24 +69,34 @@ def affichage(player_game) :
     player_card3 = SYMBOLS_IMG[player_game[2]].get_rect() 
     player_card3.x = LARGEUR_SCREEN/2-LARGEUR_CARD/2+LARGEUR_CARD+MARGE
     player_card3.y = HAUTEUR_SCREEN-HAUTEUR_CARD-MARGE
+
+    return player_card1, player_card2, player_card3
+
+def affichage(player_game, player_card1, player_card2, player_card3, images) :
+    """
+    Appelle tout ce qui est nécessaire à afficher.
+    """
+    SYMBOLS_IMG = {'rock' : images["img_rock_card"],
+                   'scissors' : images["img_scissors_card"],
+                   'paper' : images["img_paper_card"] }
     
     #affichage du fond
     SCREEN_SURFACE.fill(BLUE_COLOR) #couleur de fond (en cas si l'image ne se charge pas)
-    SCREEN_SURFACE.blit(img_fond, (-520, -220))
+    SCREEN_SURFACE.blit(images["img_fond"], (-520, -220))
     #affichage Yumeko dans le coin droit de la  fenêtre
-    SCREEN_SURFACE.blit(img_yumeko, (LARGEUR_SCREEN-300, HAUTEUR_SCREEN-250))
+    SCREEN_SURFACE.blit(images["img_yumeko"], (LARGEUR_SCREEN-300, HAUTEUR_SCREEN-250))
     #affichage Saotome dans le coin gauche de la  fenêtre
-    SCREEN_SURFACE.blit(img_saotome, (0, HAUTEUR_SCREEN-300))      
+    SCREEN_SURFACE.blit(images["img_saotome"], (0, HAUTEUR_SCREEN-300))      
     #affichage carte 1,2,3 IA
-    SCREEN_SURFACE.blit(img_back_card, (LARGEUR_SCREEN/2-LARGEUR_CARD/2-LARGEUR_CARD-MARGE, MARGE))
-    SCREEN_SURFACE.blit(img_back_card, (LARGEUR_SCREEN/2-LARGEUR_CARD/2, MARGE))
-    SCREEN_SURFACE.blit(img_back_card, (LARGEUR_SCREEN/2-LARGEUR_CARD/2+LARGEUR_CARD+MARGE, MARGE))
+    SCREEN_SURFACE.blit(images["img_back_card"], (LARGEUR_SCREEN/2-LARGEUR_CARD/2-LARGEUR_CARD-MARGE, MARGE))
+    SCREEN_SURFACE.blit(images["img_back_card"], (LARGEUR_SCREEN/2-LARGEUR_CARD/2, MARGE))
+    SCREEN_SURFACE.blit(images["img_back_card"], (LARGEUR_SCREEN/2-LARGEUR_CARD/2+LARGEUR_CARD+MARGE, MARGE))
     #affichage carte 1,2,3 joueur
     SCREEN_SURFACE.blit(SYMBOLS_IMG[player_game[0]], player_card1)
     SCREEN_SURFACE.blit(SYMBOLS_IMG[player_game[1]], player_card2)
     SCREEN_SURFACE.blit(SYMBOLS_IMG[player_game[2]], player_card3)
     
-    return player_card1, player_card2, player_card3
+    return None
 
 
 def pick_player_cards(box) :
@@ -116,7 +116,6 @@ def pick_player_cards(box) :
 
 def allow_validation(card_state) :
     carte_up = 0
-    print(card_state)
     for cle in card_state :
         if card_state[cle] == 1 :
             carte_up += 1 
@@ -141,41 +140,42 @@ def dist(coo_point1, coo_point2) :
     distance = math.sqrt( (x1-x2)**2 + (y1-y2)**2 )
     return distance
 
-"""
-def card_go_up(card, card_state) :
+
+def card_go_up(card, player_card1, player_card2, player_card3, player_game, clock, images) :
     """
-    #Déplacement d'une carte vers le haut (lorsqu'on la sélectionne).    
-"""
+    Déplacement d'une carte vers le haut (lorsqu'on la sélectionne).    
+    """
     # Vérifie qu'il n'y a pas une autre carte de levé, si oui, la replace à son état initial.
-    if card_state['player_card1'] == 1 :
-        card_go_down(player_card1)
-        card_state['player_card1'] = 0
-    elif card_state['player_card2'] == 1 :
-        card_go_down(player_card2)
-        card_state['player_card2'] = 0
-    elif card_state['player_card3'] == 1 :
-        card_go_down(player_card3)
-        card_state['player_card3'] = 0
+    if CARD_STATE['player_card1'] == 1 :
+        card_go_down(player_card1, player_game, player_card1, player_card2, player_card3, images)
+        CARD_STATE['player_card1'] = 0
+    elif CARD_STATE['player_card2'] == 1 :
+        card_go_down(player_card2, player_game, player_card1, player_card2, player_card3, images)
+        CARD_STATE['player_card2'] = 0
+    elif CARD_STATE['player_card3'] == 1 :
+        card_go_down(player_card3, player_game, player_card1, player_card2, player_card3, images)
+        CARD_STATE['player_card3'] = 0
     i=0
     while i < 10 :
-        time.sleep(.010) #milliseconde, sinon par défaut c'est en seconde
+        pygame.event.pump()
         card.move_ip(0, -5) #déplace de 5 (x, y)
-        affichage()
+        affichage(player_game, player_card1, player_card2, player_card3, images)
         pygame.display.flip() #maj affichage
+        clock.tick(FPS)
         i += 1  #incrémentation de i#clic gauche
     return None
     
 
-def card_go_down(card) :
+def card_go_down(card, player_game, player_card1, player_card2, player_card3, clock, images) :
     """
-    #Déplacement d'une carte vers le bas.
-"""
+    Déplacement d'une carte vers le bas.
+    """
     i=0
     while i < 10 :
-        time.sleep(.010) #milliseconde, sinon par défaut c'est en seconde
+        pygame.event.pump()
         card.move_ip(0, 5) #déplace de 5 (x, y)
-        affichage()
+        affichage(player_game, player_card1, player_card2, player_card3, images)
         pygame.display.flip() #maj affichage
+        clock.tick(FPS)
         i += 1  #incrémentation de i#clic gauche
     return None
-"""
