@@ -35,6 +35,11 @@ def run_game():
     box, ia_game = pick_player_cards(box) # Jeu de l'IA
     box, player_game = pick_player_cards(box) # Jeu du joueur
     player_card1, player_card2, player_card3 = generate_player_game(player_game, images)
+    player_cards = {
+        "player_card1" : player_card1,
+        "player_card2" : player_card2,
+        "player_card3" : player_card3
+    }
 
     print(ia_game)
     print(player_game)
@@ -43,7 +48,7 @@ def run_game():
 
     launched = True
     while launched:
-        affichage(player_game, player_card1, player_card2, player_card3, images)
+        affichage(player_game, player_cards, images)
         validate = allow_validation(CARD_STATE)
         if validate :
             draw_validation()
@@ -54,19 +59,19 @@ def run_game():
                 if event.button == 1 : #clic gauche effectué
                     mouse_pos = pygame.mouse.get_pos() #récupère la position du clic
                     if player_card1.collidepoint(mouse_pos) and (CARD_STATE['player_card1'] == 0) :                   
-                        card_go_up(player_card1, player_card1, player_card2, player_card3, player_game, clock, images)
+                        card_go_up(player_card1, player_cards, player_game, clock, images)
                         CARD_STATE['player_card1'] = 1 #état up
                     elif player_card2.collidepoint(mouse_pos) and CARD_STATE['player_card2'] == 0 :                   
-                        card_go_up(player_card2, player_card1, player_card2, player_card3, player_game, clock, images)     
+                        card_go_up(player_card2, player_cards, player_game, clock, images)     
                         CARD_STATE['player_card2'] = 1 
                     elif player_card3.collidepoint(mouse_pos) and CARD_STATE['player_card3'] == 0 :                   
-                        card_go_up(player_card3, player_card1, player_card2, player_card3, player_game, clock, images)     
+                        card_go_up(player_card3, player_cards, player_game, clock, images)     
                         CARD_STATE['player_card3'] = 1
                     elif not player_card1.collidepoint(mouse_pos) and not player_card2.collidepoint(mouse_pos) and not player_card3.collidepoint(mouse_pos):
                         #en cas de clic sur aucunes cartes, les remets toutes à emplacement initial
                         for cle in CARD_STATE :
                             if CARD_STATE[cle] == 1 :
-                                card_go_down(eval(cle), player_game, player_card1, player_card2, player_card3, clock, images)
+                                card_go_down(player_cards[cle], player_game, player_cards, clock, images)
                                 CARD_STATE[cle] = 0
                     if validate :
                         if dist(VALID_BUTTON_COO, mouse_pos) < VALID_BUTTON_RADIUS+2 :

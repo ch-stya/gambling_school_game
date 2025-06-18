@@ -72,7 +72,7 @@ def generate_player_game(player_game, images):
 
     return player_card1, player_card2, player_card3
 
-def affichage(player_game, player_card1, player_card2, player_card3, images) :
+def affichage(player_game, player_cards, images) :
     """
     Appelle tout ce qui est nécessaire à afficher.
     """
@@ -92,9 +92,9 @@ def affichage(player_game, player_card1, player_card2, player_card3, images) :
     SCREEN_SURFACE.blit(images["img_back_card"], (LARGEUR_SCREEN/2-LARGEUR_CARD/2, MARGE))
     SCREEN_SURFACE.blit(images["img_back_card"], (LARGEUR_SCREEN/2-LARGEUR_CARD/2+LARGEUR_CARD+MARGE, MARGE))
     #affichage carte 1,2,3 joueur
-    SCREEN_SURFACE.blit(SYMBOLS_IMG[player_game[0]], player_card1)
-    SCREEN_SURFACE.blit(SYMBOLS_IMG[player_game[1]], player_card2)
-    SCREEN_SURFACE.blit(SYMBOLS_IMG[player_game[2]], player_card3)
+    SCREEN_SURFACE.blit(SYMBOLS_IMG[player_game[0]], player_cards["player_card1"])
+    SCREEN_SURFACE.blit(SYMBOLS_IMG[player_game[1]], player_cards["player_card2"])
+    SCREEN_SURFACE.blit(SYMBOLS_IMG[player_game[2]], player_cards["player_card3"])
     
     return None
 
@@ -141,32 +141,32 @@ def dist(coo_point1, coo_point2) :
     return distance
 
 
-def card_go_up(card, player_card1, player_card2, player_card3, player_game, clock, images) :
+def card_go_up(card, player_cards, player_game, clock, images) :
     """
     Déplacement d'une carte vers le haut (lorsqu'on la sélectionne).    
     """
     # Vérifie qu'il n'y a pas une autre carte de levé, si oui, la replace à son état initial.
     if CARD_STATE['player_card1'] == 1 :
-        card_go_down(player_card1, player_game, player_card1, player_card2, player_card3, images)
+        card_go_down(player_cards["player_card1"], player_game, player_cards, clock, images)
         CARD_STATE['player_card1'] = 0
     elif CARD_STATE['player_card2'] == 1 :
-        card_go_down(player_card2, player_game, player_card1, player_card2, player_card3, images)
+        card_go_down(player_cards["player_card2"], player_game, player_cards, clock, images)
         CARD_STATE['player_card2'] = 0
     elif CARD_STATE['player_card3'] == 1 :
-        card_go_down(player_card3, player_game, player_card1, player_card2, player_card3, images)
+        card_go_down(player_cards["player_card3"], player_game, player_cards, clock, images)
         CARD_STATE['player_card3'] = 0
     i=0
     while i < 10 :
         pygame.event.pump()
         card.move_ip(0, -5) #déplace de 5 (x, y)
-        affichage(player_game, player_card1, player_card2, player_card3, images)
+        affichage(player_game, player_cards, images)
         pygame.display.flip() #maj affichage
         clock.tick(FPS)
         i += 1  #incrémentation de i#clic gauche
     return None
     
 
-def card_go_down(card, player_game, player_card1, player_card2, player_card3, clock, images) :
+def card_go_down(card, player_game, player_cards, clock, images) :
     """
     Déplacement d'une carte vers le bas.
     """
@@ -174,7 +174,7 @@ def card_go_down(card, player_game, player_card1, player_card2, player_card3, cl
     while i < 10 :
         pygame.event.pump()
         card.move_ip(0, 5) #déplace de 5 (x, y)
-        affichage(player_game, player_card1, player_card2, player_card3, images)
+        affichage(player_game, player_cards, images)
         pygame.display.flip() #maj affichage
         clock.tick(FPS)
         i += 1  #incrémentation de i#clic gauche
